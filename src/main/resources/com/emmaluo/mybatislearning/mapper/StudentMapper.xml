@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.emmaluo.mybatislearning.IDAO.StudentMapper">
+    <resultMap id="AddressResult" type="Address">
+        <id property="addrId" column="addr_id" />
+        <result property="street" column="street" />
+        <result property="city" column="city" />
+        <result property="state" column="state" />
+        <result property="zip" column="zip" />
+        <result property="country" column="country" />
+    </resultMap>
+
+
+    <resultMap id="StudentResult" type="Student">
+        <id property="studId" column="stud_id"/>
+        <result property="name" column="name"/>
+        <result property="email" column="email"/>
+        <result property="dob" column="dob"/>
+    </resultMap>
+    <resultMap id="StudentWithAddressResult" type="Student" >
+        <id property="studId" column="stud_id"/>
+        <result property="name" column="name"/>
+        <result property="email" column="email"/>
+        <result property="dob" column="dob"/>
+        <result property="gender" column="gender" />
+        <result property="phone" column="phone" javaType="PhoneNumber" jdbcType="VARCHAR" typeHandler="com.emmaluo.mybatislearning.typehandler.PhoneTypeHandler" />
+        <association property="address" resultMap="AddressResult" />
+    </resultMap>
+    <select id="selectStudentWithAddress" parameterType="int" resultMap="StudentWithAddressResult">
+        SELECT STUD_ID, NAME, EMAIL, PHONE,dob, A.ADDR_ID, STREET, CITY,
+                STATE, ZIP, COUNTRY
+        FROM STUDENTS S LEFT OUTER JOIN ADDRESSES A ON
+              S.ADDR_ID=A.ADDR_ID
+        WHERE STUD_ID=#{studId}
+    </select>
+    <select id="findAllStudents" resultMap="StudentResult">
+        SELECT * from students
+    </select>
+    <select id="findStudentById" parameterType="int" resultType="Student">
+        SELECT STUD_ID as studId,NAME,EMAIL,DOB,PHONE,gender
+        FROM STUDENTS WHERE STUD_ID=#{id}
+    </select>
+    <select id="findAllStudentsByNameEmail" resultMap="StudentWithAddressResult">
+        SELECT STUD_ID,NAME,EMAIL,DOB,PHONE,gender
+        FROM STUDENTS WHERE name = #{param1} and email=#{param2}
+    </select>
+    <insert id="insertStudent" parameterType="Student" useGeneratedKeys="true" keyProperty="studId">
+        insert into students(name,email,dob)
+        values(#{name},#{email},#{dob})
+    </insert>
+    <insert id="insertStudentWithPhone" parameterType="Student" useGeneratedKeys="true" keyProperty="studId">
+        insert into students(name,email,dob,PHONE)
+        values(#{name},#{email},#{dob},#{phone})
+    </insert>
+    <insert id="insertStudentWithGender" parameterType="Student"
+            useGeneratedKeys="true" keyProperty="studId">
+        insert into students(name,email,addr_id, phone,gender)
+        values(#{name},#{email},#{address.addrId},#{phone},#{gender})
+    </insert>
+    <delete id="deleteStudentById" parameterType="int">
+        DELETE FROM students
+        WHERE stud_id=#{id}
+    </delete>
+    <update id="updateStudent" parameterType="Student">
+        update students
+        <set>
+            <if test="name != null">name=#{name},</if>
+            <if test="email != null">email=#{email},</if>
+
+        </set>
+        where stud_id=#{studId}
+    </update>
+</mapper>
